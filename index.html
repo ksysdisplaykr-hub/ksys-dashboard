@@ -1,0 +1,1388 @@
+<title>KSYS 문의 현황 (Daou)</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root {
+    color-scheme: light;
+    --bg:        #f9f9f7;
+    --surface:   #fcfcfb;
+    --surface-2: #f2f1ed;
+    --ink:       #0b0b0b;
+    --ink-2:     #52514e;
+    --ink-3:     #898781;
+    --line:      #e1e0d9;
+    --border:    rgba(11,11,11,0.10);
+    --accent:    #2a78d6;
+    --accent-ink:#ffffff;
+    --delta-up:  #c22a2a;
+    --highlight: #eb6834;
+    --sev-caution: #a36a00;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --bg:        #0d0d0d;
+      --surface:   #1a1a19;
+      --surface-2: #232320;
+      --ink:       #ffffff;
+      --ink-2:     #c3c2b7;
+      --ink-3:     #898781;
+      --line:      #2c2c2a;
+      --border:    rgba(255,255,255,0.10);
+      --accent:    #3987e5;
+      --accent-ink:#ffffff;
+      --delta-up:  #e66767;
+      --highlight: #d95926;
+      --sev-caution: #e0a52e;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg:        #0d0d0d;
+    --surface:   #1a1a19;
+    --surface-2: #232320;
+    --ink:       #ffffff;
+    --ink-2:     #c3c2b7;
+    --ink-3:     #898781;
+    --line:      #2c2c2a;
+    --border:    rgba(255,255,255,0.10);
+    --accent:    #3987e5;
+    --accent-ink:#ffffff;
+    --delta-up:  #e66767;
+    --highlight: #d95926;
+    --sev-caution: #e0a52e;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "IBM Plex Sans KR", system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  .mono { font-family: "IBM Plex Mono", ui-monospace, "SF Mono", monospace; font-variant-numeric: tabular-nums; }
+
+  .wrap { max-width: 1400px; margin: 0 auto; padding: 28px 22px 64px; }
+
+  header.top { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 22px; }
+  .titleblock h1 { font-size: 21px; font-weight: 700; margin: 0 0 5px; text-wrap: balance; letter-spacing: -0.01em; }
+  .titleblock p { font-size: 13px; color: var(--ink-2); margin: 0; }
+  .top-right { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+  .source-link { font-size: 12px; color: var(--ink-3); text-decoration: none; }
+  .source-link:hover { color: var(--ink-2); text-decoration: underline; }
+  .live-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--ink-2); background: var(--surface-2); border: 1px solid var(--border); border-radius: 999px; padding: 5px 12px 5px 10px; cursor: default; }
+  .live-badge.stale { color: var(--delta-up); background: color-mix(in srgb, var(--delta-up) 12%, var(--surface-2)); border-color: var(--delta-up); }
+  .live-dot { width: 7px; height: 7px; border-radius: 50%; background: #d9a30c; flex: none; }
+  .live-dot.stale { background: var(--delta-up); animation: urgent-pulse 1.8s ease-in-out infinite; }
+  .update-schedule { font-size: 11.5px; color: var(--ink-3); text-align: right; cursor: help; }
+  .beta-badge { display: inline-flex; align-items: center; font-size: 11px; font-weight: 700; letter-spacing: .03em; color: var(--accent-ink); background: var(--accent); border-radius: 999px; padding: 3px 9px; }
+
+  .toolbar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 20px; }
+  .segmented { display: inline-flex; background: var(--surface-2); border: 1px solid var(--border); border-radius: 11px; padding: 3px; gap: 2px; }
+  .segmented button {
+    appearance: none; border: none; background: transparent; cursor: pointer;
+    padding: 8px 20px; font: inherit; font-size: 14px; font-weight: 600; border-radius: 8px;
+    color: var(--ink-2); transition: background .15s, color .15s;
+  }
+  .segmented button.active { background: var(--accent); color: var(--accent-ink); }
+  .segmented button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .period-picker { display: inline-flex; align-items: center; gap: 8px; }
+  .period-picker[hidden] { display: none; }
+  .period-picker input[type="date"], .period-picker input[type="month"], .period-picker select {
+    font: inherit; font-size: 13px; color: var(--ink); background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; padding: 7px 10px; cursor: pointer;
+  }
+  .period-picker select { max-width: 240px; }
+  .period-picker button {
+    appearance: none; border: 1px solid var(--border); background: var(--surface-2); color: var(--ink-2);
+    border-radius: 8px; padding: 7px 12px; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer;
+  }
+  .period-picker button:hover { color: var(--ink); }
+  .anchor-row { background: color-mix(in srgb, var(--accent) 14%, transparent) !important; font-weight: 600; }
+
+  .stat-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 18px; }
+  .stat-tile { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 18px 20px; }
+  .stat-label { font-size: 12px; color: var(--ink-2); margin-bottom: 10px; }
+  .stat-value { font-size: 30px; font-weight: 600; line-height: 1; }
+  .stat-value .unit { font-family: "IBM Plex Sans KR", sans-serif; font-size: 14px; font-weight: 600; color: var(--ink-3); margin-left: 2px; }
+  .stat-delta { font-size: 13px; color: var(--ink-2); margin-top: 8px; }
+  .delta-up { color: var(--delta-up); font-weight: 700; }
+  .delta-down { color: var(--accent); font-weight: 700; }
+  .stat-kpi { font-size: 13px; color: var(--ink-2); margin-top: 6px; }
+  .kpi-good { color: var(--accent); font-weight: 700; }
+  .kpi-watch { color: var(--sev-caution); font-weight: 700; }
+  .stat-range { font-size: 15px; font-weight: 600; line-height: 1.5; }
+
+  .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 20px 22px; margin-bottom: 14px; }
+  .panel h2 { font-size: 14px; font-weight: 700; margin: 0 0 3px; }
+  .panel .panel-sub { font-size: 12px; color: var(--ink-3); margin: 0 0 16px; line-height: 1.7; }
+  .panel .panel-sub.stacked { display: flex; flex-direction: column; gap: 3px; }
+  .region-legend-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--highlight); margin: 0 2px -1px 2px; }
+  .chart-box { position: relative; }
+  .chart-box.trend { height: 250px; }
+  .chart-box.region { height: 460px; }
+
+  .market-summary { font-size: 13px; color: var(--ink-2); margin-bottom: 12px; }
+  .market-bar { display: flex; width: 100%; height: 16px; border-radius: 8px; overflow: hidden; background: var(--surface-2); margin-bottom: 12px; }
+  .market-seg { height: 100%; cursor: pointer; transition: filter .15s; }
+  .market-seg:hover { filter: brightness(1.15); }
+  .market-public  { background: var(--accent); }
+  .market-private { background: var(--highlight); }
+  .market-etc     { background: var(--ink-3); }
+  .market-legend { display: flex; flex-wrap: wrap; gap: 8px; font-size: 13px; color: var(--ink-2); }
+  .market-legend .mono { font-weight: 600; color: var(--ink); }
+  .market-legend-item { display: inline-flex; align-items: center; cursor: pointer; border: 1px solid var(--border); border-radius: 999px; padding: 5px 12px; transition: background .15s, border-color .15s; }
+  .market-legend-item:hover { background: var(--surface-2); border-color: var(--ink-3); }
+  .market-legend-item.disabled { cursor: default; opacity: .5; }
+  .market-legend-item.disabled:hover { background: none; border-color: var(--border); }
+  .market-dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 6px; vertical-align: middle; }
+  .market-hint { font-size: 11.5px; color: var(--ink-3); margin: 10px 0 0; }
+
+  table.data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  table.data-table th, table.data-table td { text-align: right; padding: 8px; border-bottom: 1px solid var(--line); }
+  table.data-table td { font-family: "IBM Plex Mono", ui-monospace, monospace; font-variant-numeric: tabular-nums; }
+  table.data-table th:first-child, table.data-table td:first-child { text-align: left; font-family: "IBM Plex Sans KR", sans-serif; }
+  table.data-table th { color: var(--ink-3); font-weight: 600; font-size: 11.5px; text-transform: uppercase; letter-spacing: .04em; position: sticky; top: 0; background: var(--surface); }
+  table.data-table tbody tr:hover { background: var(--surface-2); }
+  .table-scroll { max-height: 320px; overflow-y: auto; overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; }
+
+  tr.expandable-row { cursor: pointer; }
+  .expand-caret { display: inline-block; margin-left: 6px; font-size: 10px; color: var(--ink-3); transition: transform .15s; }
+  tr.expandable-row.expanded .expand-caret { transform: rotate(90deg); }
+  tr.detail-row td { padding: 0 !important; background: var(--surface-2); }
+  .detail-table-scroll { max-height: 260px; overflow-y: auto; overflow-x: auto; margin: 10px; border: 1px solid var(--line); border-radius: 8px; }
+  table.detail-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  table.detail-table th, table.detail-table td { text-align: left; padding: 6px 10px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  table.detail-table th { color: var(--ink-3); font-weight: 600; font-size: 10.5px; text-transform: uppercase; letter-spacing: .03em; position: sticky; top: 0; background: var(--surface-2); }
+  table.detail-table tbody tr:hover { background: var(--surface); }
+  .detail-empty { padding: 14px; font-size: 12px; color: var(--ink-3); text-align: center; }
+  .sev-badge { display: inline-block; margin-left: 6px; padding: 1px 7px; border-radius: 999px; font-size: 10.5px; font-weight: 700; letter-spacing: .02em; color: #fff; white-space: nowrap; }
+  .sev-caution { background: var(--sev-caution); }
+  .sev-warning { background: var(--highlight); }
+  .sev-urgent  { background: var(--delta-up); }
+
+  .status-msg { font-size: 13px; color: var(--ink-3); padding: 46px 0; text-align: center; }
+
+  footer { text-align: center; font-size: 11px; color: var(--ink-3); margin-top: 22px; }
+
+  .urgent-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; color: #fff; background: var(--delta-up); border: none; border-radius: 999px; padding: 6px 14px; cursor: pointer; font-family: inherit; animation: urgent-pulse 1.8s ease-in-out infinite; }
+  .urgent-badge:hover { filter: brightness(1.08); }
+  @keyframes urgent-pulse {
+    0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--delta-up) 45%, transparent); }
+    50% { box-shadow: 0 0 0 6px color-mix(in srgb, var(--delta-up) 0%, transparent); }
+  }
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; padding: 20px; z-index: 1000; }
+  .modal-box { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; max-width: 640px; width: 100%; max-height: 80vh; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.35); }
+  .modal-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 18px 20px; border-bottom: 1px solid var(--line); flex: none; }
+  .modal-header h2 { font-size: 15px; font-weight: 700; margin: 0; color: var(--delta-up); }
+  .modal-header h2.neutral { color: var(--ink); }
+  .modal-close { appearance: none; border: none; background: var(--surface-2); color: var(--ink-2); width: 28px; height: 28px; border-radius: 50%; cursor: pointer; font-size: 14px; line-height: 1; flex: none; }
+  .modal-close:hover { color: var(--ink); }
+  .modal-body { padding: 12px 20px 20px; overflow-y: auto; }
+  .modal-sub { font-size: 12px; color: var(--ink-3); margin: 0 0 12px; }
+  .urgent-item { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; margin-bottom: 8px; cursor: pointer; background: var(--surface); transition: background .15s; }
+  .urgent-item:hover { background: var(--surface-2); }
+  .urgent-item-main { min-width: 0; }
+  .urgent-item-company { font-weight: 600; font-size: 13.5px; margin-bottom: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .urgent-item-meta { font-size: 11.5px; color: var(--ink-3); }
+  .urgent-item-mins { flex: none; font-family: "IBM Plex Mono", ui-monospace, monospace; font-weight: 700; color: var(--delta-up); font-size: 13px; text-align: right; white-space: nowrap; }
+  .urgent-empty { padding: 20px; text-align: center; color: var(--ink-3); font-size: 13px; }
+  .badge-row { display: flex; align-items: center; gap: 8px; }
+  .refresh-btn { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; color: var(--ink-2); background: var(--surface-2); border: 1px solid var(--border); border-radius: 999px; padding: 5px 12px; cursor: pointer; font-family: inherit; }
+  .refresh-btn:hover { color: var(--ink); border-color: var(--ink-3); }
+  .refresh-btn:active { transform: scale(0.97); }
+  .refresh-btn .spin { display: inline-block; transition: transform .5s ease; }
+  .refresh-btn.spinning .spin { transform: rotate(360deg); }
+
+  .hero-row { display: flex; align-items: flex-start; gap: 14px; }
+  .hero-main { flex: 1 1 auto; min-width: 0; }
+  .hero-main .panel:last-child { margin-bottom: 0; }
+  .hero-side { width: 480px; flex-shrink: 0; }
+  .hero-side .panel { margin-bottom: 0; display: flex; flex-direction: column; min-height: 0; }
+  .hero-side .panel h2 { display: flex; align-items: center; gap: 8px; margin: 0; }
+  .open-count-badge { display: inline-flex; align-items: center; justify-content: center; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px; background: var(--highlight); color: #fff; font-size: 11px; font-weight: 700; }
+  .open-panel-head-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; margin-bottom: 3px; }
+  .segmented-sm { padding: 2px; flex: none; }
+  .segmented-sm button { padding: 5px 12px; font-size: 12px; }
+  .open-filter-row { display: flex; gap: 8px; margin-bottom: 10px; }
+  #openUpdaterFilter, #openSortOrder { padding: 6px 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface-2); color: var(--ink); font-family: inherit; font-size: 12.5px; }
+  #openUpdaterFilter { flex: 1 1 auto; min-width: 0; }
+  #openSortOrder { flex: 0 0 auto; }
+  .open-table-scroll { flex: 1; min-height: 0; overflow-y: auto; overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; }
+  .open-table-scroll-mirror { overflow-x: auto; overflow-y: hidden; height: 14px; margin-bottom: 6px; flex: none; }
+  #openTableScrollMirrorInner { height: 1px; }
+  table.open-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  table.open-table th, table.open-table td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  table.open-table th { color: var(--ink-3); font-weight: 600; font-size: 10px; text-transform: uppercase; letter-spacing: .03em; position: sticky; top: 0; background: var(--surface-2); }
+  table.open-table tbody tr:hover { background: var(--surface); }
+  table.open-table tr.open-expandable { cursor: pointer; }
+  table.open-table tr.open-expandable td:first-child { display: flex; align-items: center; gap: 4px; }
+  table.open-table tr.open-expandable.expanded .expand-caret { transform: rotate(90deg); }
+  .open-detail-row td { white-space: normal; }
+  .open-detail-content { padding: 10px 12px; font-size: 12px; color: var(--ink-2); line-height: 1.6; white-space: pre-wrap; }
+  .open-detail-empty { padding: 10px 12px; font-size: 12px; color: var(--ink-3); }
+  .open-confirm-cell { text-align: center; white-space: nowrap; }
+  .open-confirm-cell input[type="checkbox"] { width: 15px; height: 15px; cursor: pointer; vertical-align: middle; }
+  .open-confirm-note { font-size: 10.5px; color: var(--ink-3); }
+
+  @media (max-width: 1100px) {
+    .hero-row { flex-direction: column; }
+    .hero-main { order: 2; }
+    .hero-side { width: 100%; order: 1; }
+    .hero-side .panel { max-height: none !important; }
+    .open-table-scroll { max-height: 420px; }
+  }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div class="titleblock">
+      <h1>케이시스(KSYS) 온라인 문의 현황 <span class="beta-badge">Daou 연동</span></h1>
+      <p>다우오피스 [KSYS] 온라인문의 원본 데이터 기준 · 일간 / 주간 / 월간 / 연간</p>
+    </div>
+    <div class="top-right">
+      <button type="button" id="urgentBadge" class="urgent-badge" hidden></button>
+      <div class="badge-row">
+        <button type="button" id="manualRefreshBtn" class="refresh-btn" title="현재 게시되어 있는 최신 버전을 다시 불러옵니다. 다우오피스에서 새 데이터를 그 자리에서 긁어오는 것은 아니고, 이미 동기화되어 게시된 내용 중 최신판을 화면에 반영합니다.">
+          <span class="spin">↻</span>새로고침
+        </button>
+        <span class="live-badge" id="liveBadge"><span class="live-dot" id="liveDot"></span><span id="lastUpdated">-</span></span>
+      </div>
+      <span class="update-schedule" title="담당자 PC의 크롬이 켜져 있고 다우오피스 로그인이 유지된 상태에서만 자동 갱신이 실행됩니다. 조건이 충족되지 않으면 해당 회차는 건너뛰고 다음 회차(10분 뒤)에 다시 시도합니다. 이 화면은 5분마다 자동으로 새로고침되어, 별도로 버튼을 누르지 않아도 최신 게시본이 표시됩니다.">10분마다 자동 갱신 (다우오피스 연동)</span>
+      <span class="source-link">다우오피스 Works · [KSYS] 온라인문의 (사내 시스템)</span>
+    </div>
+  </header>
+
+  <div class="toolbar">
+    <div class="segmented" id="modeSwitch" role="tablist" aria-label="기간 단위">
+      <button data-mode="daily" class="active" role="tab" aria-selected="true">일간</button>
+      <button data-mode="weekly" role="tab" aria-selected="false">주간</button>
+      <button data-mode="monthly" role="tab" aria-selected="false">월간</button>
+      <button data-mode="yearly" role="tab" aria-selected="false">연간</button>
+    </div>
+    <div class="period-picker" id="dailyPickerWrap" hidden>
+      <input type="date" id="dailyPicker" aria-label="날짜 선택">
+    </div>
+    <div class="period-picker" id="weeklyPickerWrap" hidden>
+      <select id="weeklyPicker" aria-label="주 선택"></select>
+    </div>
+    <div class="period-picker" id="monthlyPickerWrap" hidden>
+      <input type="month" id="monthlyPicker" aria-label="월 선택">
+    </div>
+    <div class="period-picker" id="yearlyPickerWrap" hidden>
+      <select id="yearlyPicker" aria-label="연도 선택"></select>
+    </div>
+  </div>
+
+  <div id="content">
+    <div class="status-msg" id="initialStatus">데이터를 불러오는 중입니다…</div>
+  </div>
+
+  <footer>다우오피스 원본 데이터 기준 · 이 대시보드는 시험 운영(베타) 중이며 10분마다 자동 갱신됩니다 (담당자 PC/로그인 상태에 따라 일부 회차는 건너뛸 수 있음) · 로그인 없이 이 링크만 열면 모든 기기에서 볼 수 있습니다</footer>
+</div>
+
+<div class="modal-overlay" id="urgentModalOverlay" hidden>
+  <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="urgentModalTitle">
+    <div class="modal-header">
+      <h2 id="urgentModalTitle">🚨 30분 이상 미처리 신규 문의</h2>
+      <button type="button" id="urgentModalClose" class="modal-close" aria-label="닫기">✕</button>
+    </div>
+    <div class="modal-body" id="urgentModalBody"></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="marketModalOverlay" hidden>
+  <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="marketModalTitle">
+    <div class="modal-header">
+      <h2 id="marketModalTitle" class="neutral">문의 목록</h2>
+      <button type="button" id="marketModalClose" class="modal-close" aria-label="닫기">✕</button>
+    </div>
+    <div class="modal-body" id="marketModalBody"></div>
+  </div>
+</div>
+
+<script>
+// This block is regenerated on every publish by the sync job — the token below
+// is replaced verbatim with a JSON object, do not hand-edit its shape here.
+const EMBEDDED = {"regionNames":["서울","경기도","인천","부산","울산","대구","광주","대전","세종","강원도","충청북도","충청남도","전라북도","전라남도","경상북도","경상남도","제주도","기타/미분류"],"yearly":[],"monthly":[],"weekly":[],"daily":[],"dailyDetail":{},"weeklyDetail":{},"monthlyDetail":{},"yearlyDetail":{},"openInquiries":[],"closedInquiries":[],"lastUpdated":"2026-10-21T04:41:34.226Z"};
+
+const REGION_COL_COUNT = 18;
+let currentMode = 'daily';
+let sections = EMBEDDED;
+let charts = { trend: null, region: null };
+let hadError = false;
+// selected[mode] holds the "ord" of a manually-picked period, or null for "latest"
+let selected = { daily: null, weekly: null, monthly: null, yearly: null };
+let pickersBuilt = { daily: false, weekly: false, yearly: false };
+
+const MODE_CONF = {
+  daily:   { label: '일간', windowSize: 30, collection: 'daily', periodUnit: '일' },
+  weekly:  { label: '주간', windowSize: 16, collection: 'weekly', periodUnit: '주' },
+  monthly: { label: '월간', windowSize: 12, collection: 'monthly', periodUnit: '개월' },
+  yearly:  { label: '연간', windowSize: 10, collection: 'yearly', periodUnit: '년' },
+};
+
+// KPI 목표: 2026년 12월까지 월 평균 80건 / 최근 12개월 합계 950건
+const KPI = { monthlyTarget: 80, windowTarget: 950 };
+
+function ordToIsoDate(ord) {
+  const s = String(ord);
+  return `${s.slice(0, 4)}-${s.slice(4, 6)}-${s.slice(6, 8)}`;
+}
+function isoDateToOrd(iso) {
+  return parseInt(iso.replace(/-/g, ''), 10);
+}
+function ordToMonthInput(ord) {
+  const s = String(ord);
+  return `${s.slice(0, 4)}-${s.slice(4, 6)}`;
+}
+function monthInputToOrd(val) {
+  return parseInt(val.replace('-', ''), 10);
+}
+function ordAddDays(ord, deltaDays) {
+  const s = String(ord);
+  const y = parseInt(s.slice(0, 4), 10);
+  const m = parseInt(s.slice(4, 6), 10) - 1;
+  const d = parseInt(s.slice(6, 8), 10);
+  const dt = new Date(Date.UTC(y, m, d));
+  dt.setUTCDate(dt.getUTCDate() + deltaDays);
+  const yy = dt.getUTCFullYear();
+  const mm = String(dt.getUTCMonth() + 1).padStart(2, '0');
+  const dd = String(dt.getUTCDate()).padStart(2, '0');
+  return parseInt(`${yy}${mm}${dd}`, 10);
+}
+function findAnchorIndex(rows, mode) {
+  const sel = selected[mode];
+  if (sel == null) return rows.length - 1;
+  const idx = rows.findIndex((r) => r.ord === sel);
+  return idx >= 0 ? idx : rows.length - 1;
+}
+
+function currentRows() {
+  return (sections && sections[MODE_CONF[currentMode].collection]) || [];
+}
+
+function getCssVar(name) {
+  return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+}
+
+function rowLabel(mode, row) {
+  if (mode === 'yearly') return `${row.year}`;
+  if (mode === 'monthly') return `${row.year}.${String(row.month).padStart(2, '0')}`;
+  if (mode === 'weekly') {
+    const shorten = (s) => (s || '').replace(/\s+/g, '').replace(/^\d{4}\./, '');
+    return `${shorten(row.startDate)}~${shorten(row.endDate)}`;
+  }
+  const shortDate = (row.date || '').replace(/\s+/g, '').replace(/^\d{4}\./, '');
+  return row.weekday ? `${shortDate}(${row.weekday})` : shortDate;
+}
+function fullLabel(mode, row) {
+  if (mode === 'yearly') return `${row.year}년`;
+  if (mode === 'monthly') return `${row.year}년 ${row.month}월`;
+  if (mode === 'weekly') return `${row.startDate} ~ ${row.endDate}`;
+  return row.weekday ? `${row.date} (${row.weekday})` : row.date;
+}
+function rangeBoundary(mode, first, last) {
+  if (mode === 'yearly') return `${first.year}년 ~ ${last.year}년`;
+  if (mode === 'monthly') return `${first.year}년 ${first.month}월 ~ ${last.year}년 ${last.month}월`;
+  if (mode === 'weekly') return `${first.startDate} ~ ${last.endDate}`;
+  return `${first.date} ~ ${last.date}`;
+}
+
+// Renders "▲ 12건" in red-bold for an increase, "▼ 12건" in blue-bold for a decrease.
+function deltaSpan(delta, unit) {
+  if (delta === 0) return `- 0${unit || ''}`;
+  const up = delta > 0;
+  const cls = up ? 'delta-up' : 'delta-down';
+  const arrow = up ? '▲' : '▼';
+  return `<span class="${cls}">${arrow} ${Math.abs(delta).toLocaleString('ko-KR')}${unit || ''}</span>`;
+}
+
+// Renders "94.0%" green when the KPI target is met/exceeded, amber otherwise.
+function kpiSpan(pct) {
+  const cls = pct >= 100 ? 'kpi-good' : 'kpi-watch';
+  return `<span class="${cls}">${pct.toFixed(1)}%</span>`;
+}
+
+function renderStats(rows, anchorIdx) {
+  const conf = MODE_CONF[currentMode];
+  const isPicked = selected[currentMode] != null;
+  const windowStart = Math.max(0, anchorIdx - conf.windowSize + 1);
+  const windowRows = rows.slice(windowStart, anchorIdx + 1);
+  const total = windowRows.reduce((s, r) => s + (r.count || 0), 0);
+  const last = rows[anchorIdx];
+
+  let prev = null;
+  let deltaLabel = '이전 대비';
+  let noPrevText = '이전 기간 데이터 없음';
+  if (last && (currentMode === 'daily' || currentMode === 'weekly')) {
+    const targetOrd = ordAddDays(last.ord, -7);
+    prev = rows.find((r) => r.ord === targetOrd) || null;
+    deltaLabel = currentMode === 'daily' ? '지난주 같은 요일 대비' : '지난주 대비';
+    noPrevText = currentMode === 'daily' ? '지난주 같은 요일 데이터 없음' : '지난주 데이터 없음';
+  } else {
+    prev = rows[anchorIdx - 1];
+  }
+  const delta = last && prev ? last.count - prev.count : null;
+
+  const rangeText = windowRows.length ? rangeBoundary(currentMode, windowRows[0], windowRows[windowRows.length - 1]) : '-';
+
+  let deltaText = noPrevText;
+  if (delta !== null) {
+    deltaText = `${deltaLabel} ${deltaSpan(delta, '건')}`;
+  }
+
+  const anchorLabel = isPicked ? '선택한 기간 문의건수' : '최신 기간 문의건수';
+
+  let anchorKpiHtml = '';
+  let windowKpiHtml = '';
+  if (currentMode === 'monthly') {
+    if (last) {
+      const monthlyPct = (last.count / KPI.monthlyTarget) * 100;
+      anchorKpiHtml = `<div class="stat-kpi">KPI 월 ${KPI.monthlyTarget}건 대비 ${kpiSpan(monthlyPct)} 달성</div>`;
+    }
+    if (windowRows.length) {
+      const windowPct = (total / KPI.windowTarget) * 100;
+      windowKpiHtml = `<div class="stat-kpi">KPI ${KPI.windowTarget.toLocaleString('ko-KR')}건 대비 ${kpiSpan(windowPct)} 달성</div>`;
+    }
+  }
+
+  return `
+    <div class="stat-tile">
+      <div class="stat-label">${anchorLabel}${last ? ' · ' + fullLabel(currentMode, last) : ''}</div>
+      <div class="stat-value mono">${last ? last.count.toLocaleString('ko-KR') : '-'}<span class="unit">건</span></div>
+      <div class="stat-delta">${deltaText}</div>
+      ${anchorKpiHtml}
+    </div>
+    <div class="stat-tile">
+      <div class="stat-label">최근 ${windowRows.length}${conf.periodUnit}간 합계</div>
+      <div class="stat-value mono">${total.toLocaleString('ko-KR')}<span class="unit">건</span></div>
+      ${windowKpiHtml}
+    </div>
+    <div class="stat-tile">
+      <div class="stat-label">표시 구간</div>
+      <div class="stat-range">${rangeText}</div>
+    </div>
+  `;
+}
+
+function buildRegionTotals(rows, regionNames) {
+  const totals = regionNames.map(() => 0);
+  rows.forEach(r => (r.regions || []).forEach((v, i) => { totals[i] += (v || 0); }));
+  return regionNames.map((name, i) => ({ name, value: totals[i] })).sort((a, b) => b.value - a.value);
+}
+
+function formatDetailDate(iso) {
+  try {
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return iso || '-';
+    return d.toLocaleString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
+  } catch (e) {
+    return iso || '-';
+  }
+}
+
+const NEW_STATUS = '신규접수';
+
+function elapsedMinutesRaw(iso) {
+  try {
+    const t = new Date(iso).getTime();
+    if (isNaN(t)) return null;
+    return Math.max(0, Math.round((Date.now() - t) / 60000));
+  } catch (e) {
+    return null;
+  }
+}
+
+// 상태가 "신규접수"인 문의만 경과시간을 보여주고 10/20/30분 기준으로 주의·경고·긴급 배지를 붙인다.
+// 그 외 상태(담당확인/상담진행/사업진행/문의종료 등)는 이미 처리된 건이므로 "-"로 표기한다.
+function elapsedCellHtml(status, createdAt) {
+  if (status !== NEW_STATUS) return '-';
+  const mins = elapsedMinutesRaw(createdAt);
+  if (mins == null) return '-';
+  let badge = '';
+  if (mins >= 30) badge = '<span class="sev-badge sev-urgent">긴급</span>';
+  else if (mins >= 20) badge = '<span class="sev-badge sev-warning">경고</span>';
+  else if (mins >= 10) badge = '<span class="sev-badge sev-caution">주의</span>';
+  return `${mins.toLocaleString('ko-KR')}분${badge}`;
+}
+
+function daysElapsed(iso) {
+  try {
+    const t = new Date(iso).getTime();
+    if (isNaN(t)) return null;
+    return Math.max(0, Math.floor((Date.now() - t) / 86400000));
+  } catch (e) {
+    return null;
+  }
+}
+
+function elapsedDaysText(days) {
+  if (days == null) return '-';
+  return `${days.toLocaleString('ko-KR')}일`;
+}
+
+// 리마인드 패널의 접수일은 상세 시각 없이 "YY.MM.DD"로만 짧게 표기한다.
+function formatShortDate(iso) {
+  try {
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return iso || '-';
+    const yy = String(d.getFullYear()).slice(-2);
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    return `${yy}.${mm}.${dd}`;
+  } catch (e) {
+    return iso || '-';
+  }
+}
+
+// 'open'(미종료) 또는 'closed'(문의종료) — 리마인드 패널이 현재 보여주는 목록.
+let openTabMode = 'open';
+// renderOpenInquiries()가 마지막으로 그린 필터/정렬 적용 후의 행 배열 — 행 클릭 시
+// 문의사항 펼치기가 이 배열의 인덱스로 데이터를 찾아 쓴다(재조회 없이).
+let currentOpenRows = [];
+
+function openSectionRows() {
+  return (sections && (openTabMode === 'closed' ? sections.closedInquiries : sections.openInquiries)) || [];
+}
+
+function populateOpenUpdaterFilter() {
+  const rows = openSectionRows();
+  const counts = new Map();
+  rows.forEach((r) => {
+    const updater = r[1] || '미지정';
+    counts.set(updater, (counts.get(updater) || 0) + 1);
+  });
+  const names = Array.from(counts.keys()).sort((a, b) => a.localeCompare(b, 'ko'));
+  const options = [`<option value="">전체 (${rows.length.toLocaleString('ko-KR')})</option>`]
+    .concat(names.map((name) => `<option value="${name}">${name} (${counts.get(name).toLocaleString('ko-KR')})</option>`));
+  document.getElementById('openUpdaterFilter').innerHTML = options.join('');
+}
+
+// 문의사항(9번째 필드)이 비어있는 행은 펼쳐도 보여줄 내용이 없어 펼치기 자체를 비활성화한다
+// (특히 '미종료' 탭은 아직 문의사항을 백필하지 않은 건이 대부분).
+function renderOpenTableHead() {
+  const confirmTh = openTabMode === 'closed' ? '<th>2차확인</th>' : '';
+  document.getElementById('openTableHead').innerHTML =
+    `<tr><th>접수일</th><th>경과일</th><th>업체명/기관명</th><th>지역</th><th>담당자</th><th>상태</th><th>연락처</th>${confirmTh}</tr>`;
+}
+
+function renderOpenInquiries() {
+  renderOpenTableHead();
+  const rows = openSectionRows();
+  const filter = document.getElementById('openUpdaterFilter').value;
+  const sortOrder = document.getElementById('openSortOrder').value;
+  let filtered = filter ? rows.filter((r) => (r[1] || '미지정') === filter) : rows.slice();
+  // 원본 rows는 접수일 오래된순으로 이미 정렬되어 있으므로 최신순일 때만 뒤집는다.
+  if (sortOrder === 'newest') filtered = filtered.slice().reverse();
+  currentOpenRows = filtered;
+  document.getElementById('openCountBadge').textContent = filtered.length.toLocaleString('ko-KR');
+  const tbody = document.getElementById('openTableBody');
+  const colspan = openTabMode === 'closed' ? 8 : 7;
+  if (!filtered.length) {
+    const emptyMsg = openTabMode === 'closed' ? '해당 담당자의 최근 1년 문의종료 건이 없습니다.' : '해당 담당자의 미종료 문의가 없습니다.';
+    tbody.innerHTML = `<tr><td colspan="${colspan}" style="text-align:center; color:var(--ink-3); padding:16px;">${emptyMsg}</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = filtered.map((r, idx) => {
+    const [status, updater, company, phone, regionText, createdAt, inquiryDetail] = r;
+    const hasDetail = !!(inquiryDetail && inquiryDetail.trim());
+    // 문의종료 탭은 활동기록이 없는 건도 "활동기록이 없습니다" 안내를 보여줘야 하므로
+    // 내용 유무와 상관없이 항상 펼쳐볼 수 있게 한다(미종료 탭은 기존대로 내용 있을 때만).
+    const expandable = openTabMode === 'closed' ? true : hasDetail;
+    const rowClasses = ['open-row'];
+    if (expandable) rowClasses.push('open-expandable');
+    const caret = expandable ? '<span class="expand-caret">▸</span>' : '';
+    let confirmTd = '';
+    if (openTabMode === 'closed') {
+      const docId = sanitizeConfirmDocId(createdAt);
+      const conf = closedConfirmations[docId];
+      const checked = conf && conf.confirmed ? 'checked' : '';
+      const disabled = db ? '' : 'disabled';
+      confirmTd = `<td class="open-confirm-cell"><input type="checkbox" class="open-confirm-checkbox" data-created-at="${escapeAttr(createdAt)}" ${checked} ${disabled}></td>`;
+    }
+    return `<tr class="${rowClasses.join(' ')}" data-open-idx="${idx}">
+      <td>${formatShortDate(createdAt)}${caret}</td>
+      <td>${elapsedDaysText(daysElapsed(createdAt))}</td>
+      <td>${company || '-'}</td>
+      <td>${regionText || '-'}</td>
+      <td>${updater || '-'}</td>
+      <td>${status || '-'}</td>
+      <td>${phone || '-'}</td>
+      ${confirmTd}
+    </tr>`;
+  }).join('');
+  syncOpenTableScrollMirror();
+}
+
+// 가로 스크롤바가 테이블 맨 아래(담당자/정렬 선택란에서 멀리 떨어진 곳)에만 있으면 찾기 번거로우므로,
+// 선택란 바로 아래에 같은 폭의 "거울" 스크롤바를 하나 더 두고 서로 스크롤 위치를 동기화한다.
+function syncOpenTableScrollMirror() {
+  const mirror = document.getElementById('openTableScrollMirror');
+  const mirrorInner = document.getElementById('openTableScrollMirrorInner');
+  const tableScroll = document.getElementById('openTableScroll');
+  const table = document.getElementById('openTable');
+  if (!mirror || !mirrorInner || !tableScroll || !table) return;
+  mirrorInner.style.width = table.scrollWidth + 'px';
+  mirror.onscroll = () => { tableScroll.scrollLeft = mirror.scrollLeft; };
+  tableScroll.onscroll = () => { mirror.scrollLeft = tableScroll.scrollLeft; };
+}
+
+function escapeAttr(s) {
+  return String(s || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+}
+
+function escapeHtml(s) {
+  return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+// ---- 문의종료 "2차 확인" 공유 체크 — db capability (없으면 체크박스는 disabled로 표시) ----
+let db = null;
+let dbUserCap = null;
+let closedConfirmations = {}; // sanitized createdAt -> {confirmed, confirmedAt}
+let closedConfirmUnsub = null;
+
+function sanitizeConfirmDocId(createdAt) {
+  return String(createdAt || '').replace(/[^a-zA-Z0-9]/g, '_') || 'unknown';
+}
+
+async function initClosedConfirmDb() {
+  try {
+    if (!window.claude || typeof window.claude.use !== 'function') return;
+    db = await window.claude.use('db');
+    dbUserCap = await window.claude.use('user');
+  } catch (e) {
+    db = null;
+  }
+  if (!db) return;
+  closedConfirmUnsub = db.collection('closed_confirmations').onSnapshot((snap) => {
+    const next = {};
+    snap.docs.forEach((d) => { next[d.id] = d.data(); });
+    closedConfirmations = next;
+    if (openTabMode === 'closed') renderOpenInquiries();
+  }, () => { /* 구독 실패 시 조용히 무시 — 체크박스는 계속 disabled로 남는다 */ });
+}
+
+async function toggleClosedConfirm(createdAt, checked) {
+  if (!db) return;
+  const docId = sanitizeConfirmDocId(createdAt);
+  try {
+    if (checked) {
+      await db.collection('closed_confirmations').doc(docId).set({ confirmed: true, confirmedAt: new Date().toISOString() });
+    } else {
+      await db.collection('closed_confirmations').doc(docId).delete();
+    }
+  } catch (e) {
+    // 쓰기 권한이 없는 뷰어(아티팩트 소유자가 아님) 등 — UI를 되돌린다.
+    renderOpenInquiries();
+  }
+}
+
+function switchOpenTab(mode) {
+  if (mode === openTabMode) return;
+  openTabMode = mode;
+  document.querySelectorAll('#openTabSwitch button').forEach((b) => {
+    const active = b.dataset.openTab === mode;
+    b.classList.toggle('active', active);
+    b.setAttribute('aria-selected', String(active));
+  });
+  document.getElementById('openPanelSub').textContent = mode === 'closed'
+    ? '최근 1년간 문의종료 처리된 건을 표시합니다 · 행을 펼쳐 다우오피스에 기록된 최신 활동내용(담당자가 남긴 처리 메모)으로 종료 사유를 확인하고, 재확인이 끝나면 2차확인에 체크해주세요'
+    : '최근 1년간 접수된 문의 중 문의종료 처리되지 않은 건을 표시합니다 · 담당자 필터와 정렬 순서를 활용해 리마인드/해피콜에 활용하세요';
+  populateOpenUpdaterFilter();
+  renderOpenInquiries();
+  syncSidePanelHeight();
+}
+
+const HERO_SIDE_BREAKPOINT = 1100;
+
+// 미종료 문의 리마인드 패널은 담당자 필터로 건수가 적으면 짧게, 많으면(예: "전체")
+// 좌측 메인 콘텐츠(통계+차트+상세데이터) 높이를 넘지 않도록 그 안에서만 스크롤되게 한다.
+function syncSidePanelHeight() {
+  const main = document.querySelector('.hero-main');
+  const sidePanel = document.querySelector('.hero-side .panel');
+  if (!main || !sidePanel) return;
+  if (window.innerWidth <= HERO_SIDE_BREAKPOINT) {
+    sidePanel.style.maxHeight = '';
+    return;
+  }
+  sidePanel.style.maxHeight = Math.round(main.getBoundingClientRect().height) + 'px';
+}
+
+window.addEventListener('resize', syncSidePanelHeight);
+
+const MARKET_LABEL = { public: '공공시장', private: '민수시장', etc: '기타' };
+let marketPanelCtx = { mode: null, ord: null }; // set by renderMarketBreakdown, read by the modal click handler
+
+function renderMarketBreakdown(row) {
+  marketPanelCtx = { mode: currentMode, ord: row ? row.ord : null };
+
+  const pub = (row && row.publicCount) || 0;
+  const priv = (row && row.privateCount) || 0;
+  const etc = (row && row.etcCount) || 0;
+  const total = pub + priv + etc;
+
+  const pct = (n) => (total ? Math.round((n / total) * 1000) / 10 : 0);
+  const pubPct = pct(pub), privPct = pct(priv), etcPct = pct(etc);
+
+  const seg = (market, n, p) => n
+    ? `<div class="market-seg market-${market}" data-market="${market}" style="flex-basis:${p}%" title="${MARKET_LABEL[market]} ${n.toLocaleString('ko-KR')}건 (${p}%) · 클릭하면 목록을 볼 수 있습니다"></div>`
+    : '';
+
+  const bar = total
+    ? `<div class="market-bar">${seg('public', pub, pubPct)}${seg('private', priv, privPct)}${seg('etc', etc, etcPct)}</div>`
+    : `<div class="market-bar"><div class="market-seg market-etc" style="flex-basis:100%"></div></div>`;
+
+  const legendItem = (market, n, p) => `
+    <span class="market-legend-item${n ? '' : ' disabled'}" data-market="${market}">
+      <span class="market-dot market-${market}"></span>${MARKET_LABEL[market]} <span class="mono">${n.toLocaleString('ko-KR')}</span>건 (${p}%)
+    </span>`;
+
+  return `
+    <div class="market-summary">이 기간 문의 ${total.toLocaleString('ko-KR')}건 중 공공시장 ${pub.toLocaleString('ko-KR')}건(${pubPct}%) · 민수시장 ${priv.toLocaleString('ko-KR')}건(${privPct}%) · 기타 ${etc.toLocaleString('ko-KR')}건(${etcPct}%)</div>
+    ${bar}
+    <div class="market-legend">
+      ${legendItem('public', pub, pubPct)}
+      ${legendItem('private', priv, privPct)}
+      ${legendItem('etc', etc, etcPct)}
+    </div>
+    <p class="market-hint">막대 또는 항목을 클릭하면 해당 분류의 문의 목록을 볼 수 있습니다</p>
+  `;
+}
+
+function getPeriodDetail(mode, ord) {
+  if (ord == null) return [];
+  const key = String(ord);
+  const maps = { daily: sections.dailyDetail, weekly: sections.weeklyDetail, monthly: sections.monthlyDetail, yearly: sections.yearlyDetail };
+  const map = maps[mode];
+  return (map && map[key]) || [];
+}
+
+function renderMarketModalBody(market) {
+  const rows = getPeriodDetail(marketPanelCtx.mode, marketPanelCtx.ord).filter((r) => r[6] === market);
+  if (!rows.length) {
+    return `<div class="detail-empty">해당 분류의 문의가 없습니다.</div>`;
+  }
+  const trs = rows.map((r) => {
+    const [status, updater, company, phone, regionText, createdAt] = r;
+    return `<tr>
+      <td>${company || '-'}</td>
+      <td>${updater || '-'}</td>
+      <td>${phone || '-'}</td>
+      <td>${regionText || '-'}</td>
+      <td>${formatDetailDate(createdAt)}</td>
+      <td>${status || '-'}</td>
+    </tr>`;
+  }).join('');
+  return `
+    <div class="detail-table-scroll">
+      <table class="detail-table">
+        <thead><tr><th>업체명/기관명</th><th>변경자</th><th>연락처</th><th>문의자소재지/설치희망지역</th><th>등록일</th><th>상태</th></tr></thead>
+        <tbody>${trs}</tbody>
+      </table>
+    </div>
+  `;
+}
+
+function openMarketModal(market) {
+  const rows = currentRows();
+  const row = rows.find((r) => r.ord === marketPanelCtx.ord);
+  const periodLabel = row ? fullLabel(marketPanelCtx.mode, row) : '';
+  const count = getPeriodDetail(marketPanelCtx.mode, marketPanelCtx.ord).filter((r) => r[6] === market).length;
+  document.getElementById('marketModalTitle').textContent = `${MARKET_LABEL[market]} 문의 목록 · ${periodLabel} (${count.toLocaleString('ko-KR')}건)`;
+  document.getElementById('marketModalBody').innerHTML = renderMarketModalBody(market);
+  document.getElementById('marketModalOverlay').hidden = false;
+}
+
+function closeMarketModal() {
+  document.getElementById('marketModalOverlay').hidden = true;
+}
+
+function renderDetailTable(ord) {
+  const rows = (sections && sections.dailyDetail && sections.dailyDetail[String(ord)]) || [];
+  if (!rows.length) {
+    return `<div class="detail-empty">등록된 문의 상세 데이터가 없습니다.</div>`;
+  }
+  const trs = rows.map((r) => {
+    const [status, updater, company, phone, regionText, createdAt] = r;
+    return `<tr>
+      <td>${updater || '-'}</td>
+      <td>${company || '-'}</td>
+      <td>${phone || '-'}</td>
+      <td>${regionText || '-'}</td>
+      <td>${formatDetailDate(createdAt)}</td>
+      <td>${elapsedCellHtml(status, createdAt)}</td>
+    </tr>`;
+  }).join('');
+  return `
+    <div class="detail-table-scroll">
+      <table class="detail-table">
+        <thead><tr><th>변경자</th><th>업체명/기관명</th><th>연락처</th><th>문의자소재지/설치희망지역</th><th>등록일</th><th>경과시간</th></tr></thead>
+        <tbody>${trs}</tbody>
+      </table>
+    </div>
+  `;
+}
+
+const PREV_PERIOD_LABEL = { daily: '전일 대비', weekly: '전주 대비', monthly: '전월 대비', yearly: '전년 대비' };
+
+function renderTable(rows, anchorIdx) {
+  const anchorOrd = rows[anchorIdx] ? rows[anchorIdx].ord : null;
+  const isDaily = currentMode === 'daily';
+  const deltaColLabel = PREV_PERIOD_LABEL[currentMode] || '전기간 대비';
+  const trs = rows.slice().reverse().map((r, idx, arr) => {
+    const prevRow = arr[idx + 1];
+    const deltaCell = prevRow ? deltaSpan(r.count - prevRow.count, '') : '-';
+    const isAnchor = anchorOrd != null && r.ord === anchorOrd;
+    const classes = [isAnchor ? 'anchor-row' : '', isDaily ? 'expandable-row' : ''].filter(Boolean).join(' ');
+    const clsAttr = classes ? ` class="${classes}"` : '';
+    const ordAttr = isDaily ? ` data-ord="${r.ord}"` : '';
+    const caret = isDaily ? '<span class="expand-caret">▸</span>' : '';
+    return `<tr${clsAttr}${ordAttr}><td>${fullLabel(currentMode, r)}${caret}</td><td>${r.count.toLocaleString('ko-KR')}</td><td>${deltaCell}</td></tr>`;
+  }).join('');
+  return `
+    <div class="table-scroll">
+      <table class="data-table">
+        <thead><tr><th>기간</th><th>문의건수</th><th>${deltaColLabel}</th></tr></thead>
+        <tbody>${trs || '<tr><td colspan="3" style="text-align:center; color:var(--ink-3); font-family:\'IBM Plex Sans KR\',sans-serif;">데이터 없음</td></tr>'}</tbody>
+      </table>
+    </div>
+  `;
+}
+
+function renderCharts(rows, regionNames, anchorIdx) {
+  const conf = MODE_CONF[currentMode];
+  const isPicked = selected[currentMode] != null;
+  const windowStart = Math.max(0, anchorIdx - conf.windowSize + 1);
+  const windowRows = rows.slice(windowStart, anchorIdx + 1);
+  const anchorOrd = rows[anchorIdx] ? rows[anchorIdx].ord : null;
+
+  const seriesColor = getCssVar('--accent');
+  const highlightColor = getCssVar('--highlight');
+  const gridColor = getCssVar('--line');
+  const mutedColor = getCssVar('--ink-3');
+
+  const pointColors = windowRows.map((r) => (anchorOrd != null && r.ord === anchorOrd ? highlightColor : seriesColor));
+  const pointRadii = windowRows.map((r) => (anchorOrd != null && r.ord === anchorOrd ? 5 : (windowRows.length > 20 ? 0 : 3)));
+
+  const trendCtx = document.getElementById('trendChart').getContext('2d');
+  if (charts.trend) charts.trend.destroy();
+  charts.trend = new Chart(trendCtx, {
+    type: 'line',
+    data: {
+      labels: windowRows.map(r => rowLabel(currentMode, r)),
+      datasets: [{
+        data: windowRows.map(r => r.count),
+        borderColor: seriesColor,
+        backgroundColor: seriesColor,
+        borderWidth: 2,
+        pointRadius: pointRadii,
+        pointHoverRadius: 6,
+        pointBackgroundColor: pointColors,
+        tension: 0.25,
+        fill: false,
+      }],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', axis: 'x', intersect: false },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            title: (items) => (items[0] ? fullLabel(currentMode, windowRows[items[0].dataIndex]) : ''),
+            label: (ctx) => `문의건수 ${ctx.parsed.y.toLocaleString('ko-KR')}건`,
+          },
+        },
+      },
+      scales: {
+        x: { grid: { display: false }, ticks: { color: mutedColor, maxRotation: 0, autoSkip: true, font: { size: 11 } } },
+        y: { beginAtZero: true, grid: { color: gridColor }, ticks: { color: mutedColor, font: { size: 11 } } },
+      },
+    },
+  });
+
+  const regionSourceRows = isPicked ? [rows[anchorIdx]].filter(Boolean) : windowRows;
+  const regionTotals = buildRegionTotals(regionSourceRows, regionNames);
+  const grandTotal = regionTotals.reduce((s, r) => s + r.value, 0);
+  const shareTarget = grandTotal * 0.3;
+  let cumBefore = 0;
+  const barColors = regionTotals.map((r) => {
+    const include = r.value > 0 && cumBefore < shareTarget;
+    cumBefore += r.value;
+    return include ? highlightColor : seriesColor;
+  });
+  const regionCtx = document.getElementById('regionChart').getContext('2d');
+  if (charts.region) charts.region.destroy();
+  charts.region = new Chart(regionCtx, {
+    type: 'bar',
+    data: {
+      labels: regionTotals.map(r => r.name),
+      datasets: [{ data: regionTotals.map(r => r.value), backgroundColor: barColors, borderRadius: 4, barThickness: 14 }],
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'nearest', axis: 'y', intersect: false },
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: (ctx) => `${ctx.label}: ${ctx.parsed.x.toLocaleString('ko-KR')}건` } },
+      },
+      scales: {
+        x: { beginAtZero: true, grid: { color: gridColor }, ticks: { color: mutedColor, font: { size: 11 } } },
+        y: { grid: { display: false }, ticks: { color: mutedColor, font: { size: 12 } } },
+      },
+    },
+  });
+}
+
+function render() {
+  const rows = currentRows();
+  const conf = MODE_CONF[currentMode];
+  const regionNames = (sections && sections.regionNames) || Array.from({ length: REGION_COL_COUNT }, (_, i) => `지역${i + 1}`);
+
+  updatePickerVisibility();
+  populatePickers();
+
+  if (!rows.length) {
+    document.getElementById('content').innerHTML = `<div class="status-msg">${conf.label} 데이터가 아직 없습니다.</div>`;
+    return;
+  }
+
+  const anchorIdx = findAnchorIndex(rows, currentMode);
+  const isPicked = selected[currentMode] != null;
+  const windowStart = Math.max(0, anchorIdx - conf.windowSize + 1);
+  const windowCount = anchorIdx - windowStart + 1;
+  const anchorRow = rows[anchorIdx];
+  const windowRows = rows.slice(windowStart, anchorIdx + 1);
+
+  const regionSub = isPicked
+    ? `${fullLabel(currentMode, anchorRow)}의 지역별 문의건수, 많은 순`
+    : `${rangeBoundary(currentMode, windowRows[0], windowRows[windowRows.length - 1])} 기준 지역별 누적 문의건수, 많은 순`;
+
+  document.getElementById('content').innerHTML = `
+    <div class="hero-row">
+      <div class="hero-main">
+        <div class="stat-row">${renderStats(rows, anchorIdx)}</div>
+        <div class="panel">
+          <h2>${conf.label} 문의건수 추이</h2>
+          <p class="panel-sub">최근 ${windowCount}개 기간 기준${isPicked ? ' · 선택한 기간까지' : ''} · 그래프에 마우스를 올리면 수치가 표시됩니다</p>
+          <div class="chart-box trend"><canvas id="trendChart"></canvas></div>
+        </div>
+        <div class="panel">
+          <h2>공공시장 / 민수시장 구성 · ${fullLabel(currentMode, anchorRow)}</h2>
+          <p class="panel-sub">${isPicked ? '선택한' : '최신'} ${conf.label} 1개 기간 기준 · 상호명 키워드 기반 자동 분류 (공공시장: 관공서·공공기관·교육기관 등 / 민수시장: 기업·병원·종교 등)</p>
+          ${renderMarketBreakdown(anchorRow)}
+        </div>
+        <div class="panel">
+          <h2>지역별 문의건수${isPicked ? '' : ` (${conf.label} 기준 합계)`}</h2>
+          <p class="panel-sub stacked">
+            <span>${regionSub}</span>
+            <span>상위 30% 지역은 <span class="region-legend-dot"></span>강조 색상으로 표시</span>
+            <span>막대에 마우스를 올리면 수치가 표시됩니다</span>
+          </p>
+          <div class="chart-box region"><canvas id="regionChart"></canvas></div>
+        </div>
+        <div class="panel">
+          <h2>${conf.label} 상세 데이터</h2>
+          ${currentMode === 'daily' ? '<p class="panel-sub">날짜를 클릭하면 해당 일자의 개별 문의 내역을 확인할 수 있습니다</p>' : ''}
+          ${renderTable(rows, anchorIdx)}
+        </div>
+      </div>
+      <aside class="hero-side">
+        <div class="panel">
+          <div class="open-panel-head-row">
+            <h2>🔔 문의 리마인드 (해피콜) <span class="open-count-badge" id="openCountBadge">0</span></h2>
+            <div class="segmented segmented-sm" id="openTabSwitch" role="tablist" aria-label="목록 구분">
+              <button type="button" data-open-tab="open" class="active" role="tab" aria-selected="true">미종료</button>
+              <button type="button" data-open-tab="closed" role="tab" aria-selected="false">문의종료</button>
+            </div>
+          </div>
+          <p class="panel-sub" id="openPanelSub">최근 1년간 접수된 문의 중 문의종료 처리되지 않은 건을 표시합니다 · 담당자 필터와 정렬 순서를 활용해 리마인드/해피콜에 활용하세요</p>
+          <div class="open-filter-row">
+            <select id="openUpdaterFilter" aria-label="담당자 선택"></select>
+            <select id="openSortOrder" aria-label="정렬 순서">
+              <option value="oldest">오래된순</option>
+              <option value="newest" selected>최신순</option>
+            </select>
+          </div>
+          <div class="open-table-scroll-mirror" id="openTableScrollMirror"><div id="openTableScrollMirrorInner"></div></div>
+          <div class="open-table-scroll" id="openTableScroll">
+            <table class="open-table" id="openTable">
+              <thead id="openTableHead"></thead>
+              <tbody id="openTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </aside>
+    </div>
+  `;
+  renderCharts(rows, regionNames, anchorIdx);
+  populateOpenUpdaterFilter();
+  renderOpenInquiries();
+  syncSidePanelHeight();
+}
+
+function updatePickerVisibility() {
+  document.getElementById('dailyPickerWrap').hidden = currentMode !== 'daily';
+  document.getElementById('weeklyPickerWrap').hidden = currentMode !== 'weekly';
+  document.getElementById('monthlyPickerWrap').hidden = currentMode !== 'monthly';
+  document.getElementById('yearlyPickerWrap').hidden = currentMode !== 'yearly';
+}
+
+function populatePickers() {
+  const dailyRows = (sections && sections.daily) || [];
+  if (dailyRows.length) {
+    const input = document.getElementById('dailyPicker');
+    input.min = ordToIsoDate(dailyRows[0].ord);
+    input.max = ordToIsoDate(dailyRows[dailyRows.length - 1].ord);
+    input.value = ordToIsoDate(selected.daily != null ? selected.daily : dailyRows[dailyRows.length - 1].ord);
+  }
+
+  const weeklyRows = (sections && sections.weekly) || [];
+  if (weeklyRows.length) {
+    const select = document.getElementById('weeklyPicker');
+    const needsRebuild = !pickersBuilt.weekly || select.options.length !== weeklyRows.length;
+    if (needsRebuild) {
+      select.innerHTML = weeklyRows.map((r) => `<option value="${r.ord}">${r.startDate.trim()} ~ ${r.endDate.trim()}</option>`).join('');
+      pickersBuilt.weekly = true;
+    }
+    select.value = selected.weekly != null ? String(selected.weekly) : String(weeklyRows[weeklyRows.length - 1].ord);
+  }
+
+  const monthlyRows = (sections && sections.monthly) || [];
+  if (monthlyRows.length) {
+    const input = document.getElementById('monthlyPicker');
+    input.min = ordToMonthInput(monthlyRows[0].ord);
+    input.max = ordToMonthInput(monthlyRows[monthlyRows.length - 1].ord);
+    input.value = ordToMonthInput(selected.monthly != null ? selected.monthly : monthlyRows[monthlyRows.length - 1].ord);
+  }
+
+  const yearlyRows = (sections && sections.yearly) || [];
+  if (yearlyRows.length) {
+    const select = document.getElementById('yearlyPicker');
+    const needsRebuild = !pickersBuilt.yearly || select.options.length !== yearlyRows.length;
+    if (needsRebuild) {
+      select.innerHTML = yearlyRows.map((r) => `<option value="${r.ord}">${r.year}년</option>`).join('');
+      pickersBuilt.yearly = true;
+    }
+    select.value = selected.yearly != null ? String(selected.yearly) : String(yearlyRows[yearlyRows.length - 1].ord);
+  }
+}
+
+document.getElementById('dailyPicker').addEventListener('change', (e) => {
+  const dailyRows = (sections && sections.daily) || [];
+  const latestOrd = dailyRows.length ? dailyRows[dailyRows.length - 1].ord : null;
+  const val = e.target.value ? isoDateToOrd(e.target.value) : null;
+  selected.daily = val === latestOrd ? null : val;
+  render();
+});
+document.getElementById('weeklyPicker').addEventListener('change', (e) => {
+  const weeklyRows = (sections && sections.weekly) || [];
+  const latestOrd = weeklyRows.length ? weeklyRows[weeklyRows.length - 1].ord : null;
+  const val = parseInt(e.target.value, 10);
+  selected.weekly = val === latestOrd ? null : val;
+  render();
+});
+document.getElementById('monthlyPicker').addEventListener('change', (e) => {
+  const monthlyRows = (sections && sections.monthly) || [];
+  const latestOrd = monthlyRows.length ? monthlyRows[monthlyRows.length - 1].ord : null;
+  const val = e.target.value ? monthInputToOrd(e.target.value) : null;
+  selected.monthly = val === latestOrd ? null : val;
+  render();
+});
+document.getElementById('yearlyPicker').addEventListener('change', (e) => {
+  const yearlyRows = (sections && sections.yearly) || [];
+  const latestOrd = yearlyRows.length ? yearlyRows[yearlyRows.length - 1].ord : null;
+  const val = parseInt(e.target.value, 10);
+  selected.yearly = val === latestOrd ? null : val;
+  render();
+});
+
+document.getElementById('modeSwitch').addEventListener('click', (e) => {
+  const btn = e.target.closest('button[data-mode]');
+  if (!btn || hadError) return;
+  currentMode = btn.dataset.mode;
+  document.querySelectorAll('#modeSwitch button').forEach((b) => {
+    const active = b === btn;
+    b.classList.toggle('active', active);
+    b.setAttribute('aria-selected', String(active));
+  });
+  render();
+});
+
+// 10분 주기 자동 동기화가 실제로 멈춰도 조용히 넘어가지 않도록, 마지막 갱신으로부터
+// 너무 오래 지났으면(정상 주기의 몇 배 이상) 배지를 빨간색으로 바꿔 누구나 바로 알아챌 수 있게 한다.
+const STALE_THRESHOLD_MIN = 25;
+
+function setLastUpdatedLabel() {
+  const el = document.getElementById('lastUpdated');
+  const badge = document.getElementById('liveBadge');
+  const dot = document.getElementById('liveDot');
+  if (!sections || !sections.lastUpdated) { el.textContent = '갱신 시각 알 수 없음'; return; }
+  try {
+    const d = new Date(sections.lastUpdated);
+    const ageMin = Math.round((Date.now() - d.getTime()) / 60000);
+    el.textContent = '데이터 기준 ' + d.toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+    const isStale = ageMin >= STALE_THRESHOLD_MIN;
+    badge.classList.toggle('stale', isStale);
+    dot.classList.toggle('stale', isStale);
+    badge.title = isStale
+      ? `마지막 자동 갱신으로부터 약 ${ageMin.toLocaleString('ko-KR')}분 경과 — 10분 주기 동기화가 정상 동작하지 않고 있을 수 있습니다. 담당자 PC/Claude Code 앱 실행 상태와 다우오피스 로그인을 확인해주세요.`
+      : '';
+  } catch (e) {
+    el.textContent = '갱신 시각 알 수 없음';
+  }
+}
+
+document.getElementById('content').addEventListener('click', (e) => {
+  const row = e.target.closest('tr.expandable-row');
+  if (!row) return;
+  const ord = row.dataset.ord;
+  const next = row.nextElementSibling;
+  if (next && next.classList.contains('detail-row') && next.dataset.detailFor === ord) {
+    next.remove();
+    row.classList.remove('expanded');
+    return;
+  }
+  const openDetail = row.parentElement.querySelector('tr.detail-row');
+  if (openDetail) {
+    const openOrd = openDetail.dataset.detailFor;
+    openDetail.remove();
+    const openRow = row.parentElement.querySelector(`tr.expandable-row[data-ord="${openOrd}"]`);
+    if (openRow) openRow.classList.remove('expanded');
+  }
+  const tr = document.createElement('tr');
+  tr.className = 'detail-row';
+  tr.dataset.detailFor = ord;
+  const td = document.createElement('td');
+  td.colSpan = 3;
+  td.innerHTML = renderDetailTable(ord);
+  tr.appendChild(td);
+  row.after(tr);
+  row.classList.add('expanded');
+});
+
+function jumpToDailyRow(ord) {
+  currentMode = 'daily';
+  document.querySelectorAll('#modeSwitch button').forEach((b) => {
+    const active = b.dataset.mode === 'daily';
+    b.classList.toggle('active', active);
+    b.setAttribute('aria-selected', String(active));
+  });
+  selected.daily = ord;
+  render();
+  setTimeout(() => {
+    const row = document.querySelector(`tr.expandable-row[data-ord="${ord}"]`);
+    if (row) {
+      row.scrollIntoView({ block: 'center' });
+      if (!row.classList.contains('expanded')) row.click();
+    }
+  }, 0);
+}
+
+// --- 30분 이상 미처리(신규접수) 문의 요약 팝업 ---------------------------------
+const URGENT_STORAGE_KEY = 'daouDismissedUrgentIds';
+
+function urgentItemId(item) {
+  return `${item.createdAt}|${item.phone}|${item.company}`;
+}
+
+const URGENT_LOOKBACK_MS = 365 * 24 * 60 * 60 * 1000; // 최근 1년
+
+function computeUrgentList() {
+  const dd = (sections && sections.dailyDetail) || {};
+  const cutoff = Date.now() - URGENT_LOOKBACK_MS;
+  const out = [];
+  for (const ordKey in dd) {
+    for (const r of dd[ordKey]) {
+      const [status, updater, company, phone, regionText, createdAt] = r;
+      if (status !== NEW_STATUS) continue;
+      const t = new Date(createdAt).getTime();
+      if (isNaN(t) || t < cutoff) continue;
+      const mins = elapsedMinutesRaw(createdAt);
+      if (mins != null && mins >= 30) {
+        out.push({ ord: parseInt(ordKey, 10), updater, company, phone, regionText, createdAt, mins, t });
+      }
+    }
+  }
+  out.sort((a, b) => b.t - a.t); // 최신 등록순
+  return out;
+}
+
+// 팝업을 닫으면 그 시점의 항목들은 세션 동안 다시 자동으로 뜨지 않는다
+// (5분마다 자동 새로고침되는데 그때마다 같은 항목이 계속 팝업으로 뜨면 방해가 되므로).
+// 단, 새로 발생한 긴급 항목이 있으면 다시 뜬다. 배지 버튼을 누르면 언제든 목록을 다시 볼 수 있다.
+function getDismissedIds() {
+  try {
+    return new Set(JSON.parse(sessionStorage.getItem(URGENT_STORAGE_KEY) || '[]'));
+  } catch (e) {
+    return new Set();
+  }
+}
+function setDismissedIds(ids) {
+  try {
+    sessionStorage.setItem(URGENT_STORAGE_KEY, JSON.stringify([...ids]));
+  } catch (e) {
+    // 세션 스토리지를 쓸 수 없어도(프라이빗 모드 등) 팝업 자체는 정상 동작해야 하므로 무시
+  }
+}
+
+function renderUrgentBadge(list) {
+  const badge = document.getElementById('urgentBadge');
+  if (!list.length) { badge.hidden = true; return; }
+  badge.hidden = false;
+  badge.textContent = `🚨 긴급 대응 필요 ${list.length}건`;
+}
+
+function renderUrgentModalBody(list) {
+  const body = document.getElementById('urgentModalBody');
+  if (!list.length) {
+    body.innerHTML = '<div class="urgent-empty">현재 30분 이상 미처리된 신규 문의가 없습니다.</div>';
+    return;
+  }
+  body.innerHTML = `
+    <p class="modal-sub">최근 1년 · 상태가 "신규접수"인 채로 30분 이상 경과한 문의를 최신 등록순으로 표시합니다. 항목을 클릭하면 해당 날짜로 이동합니다.</p>
+    ${list.map((item) => `
+      <div class="urgent-item" data-ord="${item.ord}">
+        <div class="urgent-item-main">
+          <div class="urgent-item-company">${item.company || '(업체명 없음)'}</div>
+          <div class="urgent-item-meta">${item.phone || '-'} · ${item.regionText || '-'} · ${formatDetailDate(item.createdAt)}</div>
+        </div>
+        <div class="urgent-item-mins">${item.mins.toLocaleString('ko-KR')}분<span class="sev-badge sev-urgent" style="margin-left:0;">긴급</span></div>
+      </div>
+    `).join('')}
+  `;
+}
+
+function openUrgentModal(list) {
+  renderUrgentModalBody(list);
+  document.getElementById('urgentModalOverlay').hidden = false;
+}
+function closeUrgentModal(list) {
+  document.getElementById('urgentModalOverlay').hidden = true;
+  if (list) setDismissedIds(new Set(list.map(urgentItemId)));
+}
+
+function checkUrgent(autoPopup) {
+  const list = computeUrgentList();
+  renderUrgentBadge(list);
+  if (autoPopup) {
+    const dismissed = getDismissedIds();
+    const hasNew = list.some((item) => !dismissed.has(urgentItemId(item)));
+    if (hasNew) openUrgentModal(list);
+  }
+  return list;
+}
+
+document.getElementById('urgentBadge').addEventListener('click', () => {
+  openUrgentModal(computeUrgentList());
+});
+document.getElementById('urgentModalClose').addEventListener('click', () => {
+  closeUrgentModal(computeUrgentList());
+});
+document.getElementById('urgentModalOverlay').addEventListener('click', (e) => {
+  if (e.target.id === 'urgentModalOverlay') closeUrgentModal(computeUrgentList());
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key !== 'Escape') return;
+  if (!document.getElementById('urgentModalOverlay').hidden) closeUrgentModal(computeUrgentList());
+  if (!document.getElementById('marketModalOverlay').hidden) closeMarketModal();
+});
+
+document.getElementById('marketModalClose').addEventListener('click', closeMarketModal);
+document.getElementById('marketModalOverlay').addEventListener('click', (e) => {
+  if (e.target.id === 'marketModalOverlay') closeMarketModal();
+});
+document.getElementById('content').addEventListener('click', (e) => {
+  const el = e.target.closest('[data-market]');
+  if (!el || el.classList.contains('disabled')) return;
+  openMarketModal(el.dataset.market);
+});
+document.getElementById('urgentModalBody').addEventListener('click', (e) => {
+  const item = e.target.closest('.urgent-item');
+  if (!item) return;
+  const ord = parseInt(item.dataset.ord, 10);
+  closeUrgentModal(computeUrgentList());
+  jumpToDailyRow(ord);
+});
+
+document.getElementById('content').addEventListener('change', (e) => {
+  if (e.target.id === 'openUpdaterFilter' || e.target.id === 'openSortOrder') renderOpenInquiries();
+  if (e.target.classList.contains('open-confirm-checkbox')) {
+    toggleClosedConfirm(e.target.dataset.createdAt, e.target.checked);
+  }
+});
+
+document.getElementById('content').addEventListener('click', (e) => {
+  const tabBtn = e.target.closest('#openTabSwitch button');
+  if (tabBtn) {
+    switchOpenTab(tabBtn.dataset.openTab);
+    return;
+  }
+  const openRow = e.target.closest('tr.open-expandable');
+  if (!openRow) return;
+  if (e.target.closest('.open-confirm-cell')) return; // 체크박스 클릭은 펼치기와 분리
+  const idx = openRow.dataset.openIdx;
+  const next = openRow.nextElementSibling;
+  if (next && next.classList.contains('open-detail-row') && next.dataset.detailFor === idx) {
+    next.remove();
+    openRow.classList.remove('expanded');
+    return;
+  }
+  const openDetail = openRow.parentElement.querySelector('tr.open-detail-row');
+  if (openDetail) {
+    const openIdx = openDetail.dataset.detailFor;
+    openDetail.remove();
+    const openOpenRow = openRow.parentElement.querySelector(`tr.open-expandable[data-open-idx="${openIdx}"]`);
+    if (openOpenRow) openOpenRow.classList.remove('expanded');
+  }
+  const r = currentOpenRows[Number(idx)];
+  const detail = r && r[6];
+  const colspan = openTabMode === 'closed' ? 8 : 7;
+  const tr = document.createElement('tr');
+  tr.className = 'open-detail-row detail-row';
+  tr.dataset.detailFor = idx;
+  const td = document.createElement('td');
+  td.colSpan = colspan;
+  const emptyLabel = openTabMode === 'closed'
+    ? '활동기록이 없습니다. (상세 댓글 기록이 없습니다)'
+    : '문의사항 내용이 아직 수집되지 않았습니다.';
+  td.innerHTML = detail
+    ? `<div class="open-detail-content">${escapeHtml(detail)}</div>`
+    : `<div class="open-detail-empty">${emptyLabel}</div>`;
+  tr.appendChild(td);
+  openRow.after(tr);
+  openRow.classList.add('expanded');
+});
+
+initClosedConfirmDb();
+setLastUpdatedLabel();
+render();
+checkUrgent(true);
+setInterval(setLastUpdatedLabel, 60 * 1000);
+
+// 담당자가 자리를 비워 "최신 버전" 버튼을 누르지 못해도, 이미 열려 있는 탭이
+// 스스로 최신 게시본을 다시 불러오도록 한다 (표시 중 데이터 갱신 시 자동 반영).
+(function setupAutoRefresh() {
+  const AUTO_REFRESH_MS = 5 * 60 * 1000; // 5분
+  let lastLoadTime = Date.now();
+  function reloadIfStale() {
+    if (Date.now() - lastLoadTime >= AUTO_REFRESH_MS) location.reload();
+  }
+  setInterval(() => {
+    if (document.visibilityState === 'visible') reloadIfStale();
+  }, 30 * 1000);
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') reloadIfStale();
+  });
+})();
+
+document.getElementById('manualRefreshBtn').addEventListener('click', (e) => {
+  e.currentTarget.classList.add('spinning');
+  location.reload();
+});
+</script>
